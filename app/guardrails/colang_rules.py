@@ -156,3 +156,16 @@ RAIL_INDICATORS = [
 
 
 
+
+
+# Multi-lingual greeting additions
+define user express greeting multilingual
+  "hola"
+  "bonjour"
+  "namaste"
+  "hallo"
+  "ciao"
+
+define flow greeting multilingual
+  user express greeting multilingual
+  bot express greeting
