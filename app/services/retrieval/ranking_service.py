@@ -65,3 +65,12 @@ def rerank_documents(query: str, documents: list[str], top_n: int = 5) -> list[s
         logfire.error(f"❌ [Reranker] Semantic Reranking Failed: {e}")
         # Fallback to the original Qdrant order to ensure the user still gets an answer
         return documents[:top_n]
+
+
+def filter_by_relative_score(results: list[dict], threshold_ratio: float = 0.6) -> list[dict]:
+    """Filter passages whose score is below a percentage of the top candidate."""
+    if not results:
+        return []
+    top_score = results[0].get("score", 1.0)
+    cutoff = top_score * threshold_ratio
+    return [r for r in results if r.get("score", 0) >= cutoff]
