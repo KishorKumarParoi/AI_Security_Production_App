@@ -56,3 +56,12 @@ def extract_cache_status(response) -> str:
             if status:
                 return status.upper()
     return "MISS"
+
+def create_request_metadata(thread_id: str, feature: str = "rag") -> dict:
+    """Generate standardized Portkey analytics tracking headers."""
+    return {
+        "environment": "production",
+        "feature": feature,
+        "thread_id": thread_id,
+        "service": "ai-security-production-app",
+    }
