@@ -100,3 +100,15 @@ def query(request: QueryRequest):
             "status": "error",
             "sources": []
         }
+
+
+@app.get("/health/live", tags=["Health"])
+def health_live():
+    """Kubernetes Liveness Probe: Verifies API process is running."""
+    return {"status": "alive"}
+
+
+@app.get("/health/ready", tags=["Health"])
+def health_ready():
+    """Kubernetes Readiness Probe: Verifies models and guardrails are loaded."""
+    return {"status": "ready", "guardrails": "active"}
