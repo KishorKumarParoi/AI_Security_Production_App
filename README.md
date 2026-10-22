@@ -82,3 +82,13 @@ Configured in `app/guardrails/`:
 1. **Off-Topic Gating**: Disallows generic casual requests (cooking, jokes, general knowledge) outside Kubernetes, Intel hardware, and enterprise networking.
 2. **Jailbreak Defense**: Blocks instructions to ignore constraints, developer mode overrides, and DAN-style persona injections.
 3. **Conversational Dialog**: Gracefully resolves greetings, capabilities requests, and farewells without triggering expensive vector search.
+
+
+---
+
+### 🛡️ Enterprise Security Suite (v1.1.0)
+- **Prompt Injection Defense**: Strips control tokens (`<|im_start|>`, `[INST]`, triple-backtick delimiter escapes).
+- **Prompt Leakage Protection**: Blocks queries attempting to dump system prompts or internal configurations.
+- **Sub-Millisecond Heuristic Classifier**: Intercepts overt jailbreaks before triggering downstream LLM inference.
+- **Correlation ID Middleware**: Propagates `X-Correlation-ID` across distributed logfire traces.
+- **Kubernetes Probes**: Native `/health/live` and `/health/ready` probes for high-availability orchestration.
