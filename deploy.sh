@@ -303,9 +303,11 @@ echo -e "\n${YELLOW}[7/11] Initializing CloudWatch Log Groups & ECS Cluster...${
 aws logs create-log-group --region "$AWS_REGION" --log-group-name /ecs/rag-api 2>/dev/null || true
 aws logs create-log-group --region "$AWS_REGION" --log-group-name /ecs/rag-ui 2>/dev/null || true
 
-aws ecs describe-clusters --region "$AWS_REGION" --clusters "$ECS_CLUSTER" --query "clusters[0].clusterArn" --output text >/dev/null 2>&1 || \
-aws ecs create-cluster --region "$AWS_REGION" --cluster-name "$ECS_CLUSTER" --capacity-providers FARGATE FARGATE_SPOT --default-capacity-provider-strategy capacityProvider=FARGATE,weight=1
-
+CLUSTER_STATUS=$(aws ecs describe-clusters --region "$AWS_REGION" --clusters "$ECS_CLUSTER" --query "clusters[?status=='ACTIVE'].status" --output text 2>/dev/null || true)
+if [ -z "$CLUSTER_STATUS" ] || [ "$CLUSTER_STATUS" != "ACTIVE" ]; then
+    echo "Creating ECS cluster ${ECS_CLUSTER}..."
+    aws ecs create-cluster --region "$AWS_REGION" --cluster-name "$ECS_CLUSTER" --capacity-providers FARGATE FARGATE_SPOT --default-capacity-provider-strategy capacityProvider=FARGATE,weight=1
+fi
 echo -e "${GREEN}✓ ECS Cluster active: ${ECS_CLUSTER}${NC}"
 
 # ── 8. APPLICATION LOAD BALANCER & TARGET GROUPS ──────────────────────────────
