@@ -269,7 +269,7 @@ cat > /tmp/rag-secrets-policy.json <<EOF
 }
 EOF
 
-SECRETS_POLICY_ARN=$(aws iam list-policies --query "Policies[?PolicyName=='rag-read-secrets-policy'].Arn" --output text)
+SECRETS_POLICY_ARN=$(aws iam list-policies --scope Local --query "Policies[?PolicyName=='rag-read-secrets-policy'].Arn" --output text)
 if [ -z "$SECRETS_POLICY_ARN" ]; then
     SECRETS_POLICY_ARN=$(aws iam create-policy --policy-name rag-read-secrets-policy --policy-document file:///tmp/rag-secrets-policy.json --query "Policy.Arn" --output text)
 fi
