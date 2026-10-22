@@ -10,3 +10,5 @@ service_account.json
 credentials.json
 __pycache__/
 *.py[cod]
+scripts/aws_secret_arns.sh
+scripts/aws_deploy_state.sh
