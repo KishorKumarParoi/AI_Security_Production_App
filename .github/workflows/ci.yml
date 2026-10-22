@@ -7,7 +7,7 @@ on:
     branches: [ main ]
 
 jobs:
-  lint-and-test:
+  lint-and-security:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -15,13 +15,16 @@ jobs:
         uses: actions/setup-python@v5
         with:
           python-version: "3.12"
-      - name: Install uv and dependencies
+      - name: Install Linting & Security Tools
         run: |
           pip install --upgrade pip
-          pip install ruff pytest
-      - name: Run Ruff Linter
+          pip install ruff pytest bandit
+      - name: Code Quality (Ruff)
         run: |
           ruff check app/ evals/ ui/ || true
-      - name: Verify package manifests
+      - name: Security Scan (Bandit AST check)
         run: |
-          python -c "import tomllib; tomllib.load(open('pyproject.toml', 'rb'))"
+          bandit -r app/ -ll --exclude .venv || true
+      - name: Run Unit Tests
+        run: |
+          pytest tests/ -v
