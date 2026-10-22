@@ -51,9 +51,3 @@ checkpointer = MemorySaver()
 rag_agent = workflow.compile(checkpointer=checkpointer)
 
 
-
-
-# Checkpoint capability verification
-def get_compiled_graph():
-    """Returns the live compiled agent graph with memory checkpointer."""
-    return rag_agent

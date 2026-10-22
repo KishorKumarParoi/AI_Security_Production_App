@@ -5,7 +5,10 @@ from dotenv import load_dotenv
 load_dotenv()
 
 class Settings:
-    # --- GEMINI EMBEDDINGS ---
+    # --- JINA AI (PRIMARY EMBEDDINGS & RERANKER) ---
+    JINA_API_KEY = os.getenv("JINA_API_KEY")
+
+    # --- GEMINI EMBEDDINGS (FALLBACK) ---
     GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
 
     # --- VECTOR DB (QDRANT) ---
@@ -43,7 +46,7 @@ class Settings:
     GOOGLE_APPLICATION_CREDENTIALS = os.getenv("GOOGLE_APPLICATION_CREDENTIALS", "service_account.json")
 
     # --- BOT & SECURITY DEFENSE ---
-    RATE_LIMIT_PER_MINUTE = int(os.getenv("RATE_LIMIT_PER_MINUTE", "60"))
+    RATE_LIMIT_PER_MINUTE = int(os.getenv("RATE_LIMIT_PER_MINUTE", "20"))
     BURST_LIMIT_PER_SECOND = int(os.getenv("BURST_LIMIT_PER_SECOND", "5"))
     MAX_PAYLOAD_BYTES = int(os.getenv("MAX_PAYLOAD_BYTES", "65536"))  # 64KB max query body
 
