@@ -127,3 +127,9 @@ if prompt := st.chat_input("Ask about your documentation..."):
             answer_placeholder.markdown(full_answer)
             st.session_state.messages.append({"role": "assistant", "content": full_answer})
             logfire.info("✅ Chat cycle completed successfully.")
+
+
+def render_telemetry_badge(latency_ms: float, cache_hit: bool):
+    """Helper to display response performance badges in Streamlit."""
+    cache_badge = "⚡ Cache: HIT" if cache_hit else "🌐 Cache: MISS"
+    return f"`{latency_ms:.1f}ms` | `{cache_badge}`"
