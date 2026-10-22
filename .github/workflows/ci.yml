@@ -1,30 +1,47 @@
-name: Enterprise CI Pipeline
+name: CI
 
 on:
   push:
-    branches: [ main ]
+    branches: [main, features, deployment]
   pull_request:
-    branches: [ main ]
+    branches: [main, features, deployment]
 
 jobs:
-  lint-and-security:
+  test:
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: ["3.12"]
+
     steps:
-      - uses: actions/checkout@v4
-      - name: Set up Python
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python ${{ matrix.python-version }}
         uses: actions/setup-python@v5
         with:
-          python-version: "3.12"
-      - name: Install Linting & Security Tools
+          python-version: ${{ matrix.python-version }}
+
+      - name: Install dependencies
         run: |
-          pip install --upgrade pip
-          pip install ruff pytest bandit
-      - name: Code Quality (Ruff)
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Lint with ruff
         run: |
-          ruff check app/ evals/ ui/ || true
-      - name: Security Scan (Bandit AST check)
+          ruff check app tests evals
+          ruff format --check app tests evals
+
+      - name: Test with pytest
+        env:
+          LOGFIRE_IGNORE_NO_CONFIG: 1
+          JINA_API_KEY: dummy
+          OPENAI_API_KEY: dummy
+          PORTKEY_API_KEY: dummy
+          PORTKEY_PRIMARY_CONFIG_ID: pc-dummy
+          QDRANT_URL: https://dummy.example.com
+          NEON_DB_URL: postgres://dummy:dummy@dummy.db:5432/dummy
+          UPSTASH_REDIS_REST_URL: https://dummy.example.com
+          UPSTASH_REDIS_REST_TOKEN: dummy
         run: |
-          bandit -r app/ -ll --exclude .venv || true
-      - name: Run Unit Tests
-        run: |
-          pytest tests/ -v
+          pytest tests/
