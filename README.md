@@ -84,7 +84,7 @@ This system solves these failure modes via a **Defense-in-Depth, Decoupled Archi
 
 ### Step 1: Ingestion & Document Processing Pipeline
 
-![Ingestion Pipeline](docs/images/01_ingestion_pipeline.jpg)
+![Ingestion Pipeline](DOCS/images/01_ingestion_pipeline.jpg)
 
 #### Ingestion Workflow Breakdown:
 1. **Source Ingestion:** Heterogeneous documents (PDF, Markdown, HTML, DOCX, TXT) ingested from enterprise Google Cloud Storage buckets (`enterprise-rag-raw-kkp-53d8ce01`).
@@ -97,7 +97,7 @@ This system solves these failure modes via a **Defense-in-Depth, Decoupled Archi
 
 ### Step 2: Multi-Layered AI Security & Threat Defense
 
-![Security & Guardrails Flow](docs/images/02_security_guardrails.jpg)
+![Security & Guardrails Flow](DOCS/images/02_security_guardrails.jpg)
 
 #### Threat Mitigation Matrix:
 
@@ -114,7 +114,7 @@ This system solves these failure modes via a **Defense-in-Depth, Decoupled Archi
 
 ### Step 3: LangGraph Agentic Reasoning & Adaptive Retrieval
 
-![Supervisor Multi-Agent Flow](docs/images/06_supervisor_multi_agent.jpg)
+![Supervisor Multi-Agent Flow](DOCS/images/06_supervisor_multi_agent.jpg)
 
 #### Autonomous Multi-Agent Network (Supervisor & 5 Specialized Sub-Agents):
 1. **👑 Security Supervisor Agent (`SecuritySupervisor`):**
@@ -138,7 +138,7 @@ This system solves these failure modes via a **Defense-in-Depth, Decoupled Archi
 
 ### Step 3.1: Enterprise Hybrid Re-Ranking Engine (Cohere v3.5 + FlashRank + Lexical BM25)
 
-![Enterprise Hybrid Re-Ranking Engine](docs/images/07_hybrid_reranker_cascade.jpg)
+![Enterprise Hybrid Re-Ranking Engine](DOCS/images/07_hybrid_reranker_cascade.jpg)
 
 #### 🎯 Re-Ranking Evaluation: Cohere vs FlashRank (Dual-Tier Cascading & RRF):
 - **FlashRank (Local ONNX):** **1.4ms latency**, **$0.00 cost**, **100% in-VPC air-gapped** data privacy. Runs locally inside the application pod on CPU using quantized `ms-marco-TinyBERT-L-2-v2`.
@@ -154,7 +154,7 @@ This system solves these failure modes via a **Defense-in-Depth, Decoupled Archi
 
 ### Step 3.2: Model Context Protocol (FastMCP) & Human-In-The-Loop (HITL) Governance
 
-![Model Context Protocol & HITL Governance](docs/images/08_mcp_hitl_governance.jpg)
+![Model Context Protocol & HITL Governance](DOCS/images/08_mcp_hitl_governance.jpg)
 
 #### 🔌 FastMCP & ⏸️ Human-In-The-Loop (HITL) Break-Glass Protection:
 - **FastMCP Tool Server:** Standardized Model Context Protocol server exposing `cve_lookup`, `threat_intel_feed`, and `waf_metrics` over JSON-RPC 2.0.
@@ -166,7 +166,7 @@ This system solves these failure modes via a **Defense-in-Depth, Decoupled Archi
 
 ### Step 4: Portkey LLM Gateway, Resilience & Observability
 
-![LLM Gateway Flow](docs/images/04_llm_gateway.jpg)
+![LLM Gateway Flow](DOCS/images/04_llm_gateway.jpg)
 
 #### High-Availability Gateway Specs:
 * **Semantic Caching:** Hashes queries semantically; identical queries return cached responses in **`<50ms`** with **zero LLM cost**.
@@ -180,7 +180,7 @@ This system solves these failure modes via a **Defense-in-Depth, Decoupled Archi
 
 ### Step 5: Cloud Deployment, CI/CD & Zero-Cost Teardown
 
-![Cloud Deployment Flow](docs/images/05_cloud_deployment.jpg)
+![Cloud Deployment Flow](DOCS/images/05_cloud_deployment.jpg)
 
 #### DevOps & Cloud Pipeline:
 * **Automated GitHub Actions CI:** Every push triggers `.github/workflows/ci.yml`, running `ruff` linting and comprehensive unit tests (`test_health.py`, `test_connection_checker.py`, `test_api_endpoints.py`).

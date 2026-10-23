@@ -86,7 +86,7 @@ graph TD
 
 ### 3.1 Ingestion & Processing Tier
 
-![Ingestion Pipeline](docs/images/01_ingestion_pipeline.jpg)
+![Ingestion Pipeline](DOCS/images/01_ingestion_pipeline.jpg)
 
 * **Google Document AI:** Leverages enterprise OCR and parsing engines to handle unstructured multi-column tables, headers, and footers without losing context.
 * **Semantic Windowing:** Breaks continuous text into fixed **512-token chunks** with **50-token overlapping borders**, preventing the splitting of critical code blocks or command sequences.
@@ -97,7 +97,7 @@ graph TD
 
 ### 3.2 Edge WAF & Threat Mitigation Tier (BotShield)
 
-![Security Guardrails](docs/images/02_security_guardrails.jpg)
+![Security Guardrails](DOCS/images/02_security_guardrails.jpg)
 
 The `BotShieldMiddleware` sits directly in the ASGI pipeline before any framework logic executes:
 
@@ -124,7 +124,7 @@ Configured via declarative **Colang** models and semantic intent matching:
 
 ### 3.4 Principal Engineer Supervisor & 5 Sub-Agents (Graph & Loop Engineering)
 
-![Supervisor Multi-Agent Network](docs/images/06_supervisor_multi_agent.jpg)
+![Supervisor Multi-Agent Network](DOCS/images/06_supervisor_multi_agent.jpg)
 
 The platform implements an autonomous **Supervisor-Worker Multi-Agent Architecture** utilizing **LangGraph StateGraph** with cyclic reflection and self-correction loops.
 
@@ -179,7 +179,7 @@ graph TD
 
 ### 3.5 Re-Ranking Architecture: Hybrid Engine (Cohere v3.5 + FlashRank + Lexical BM25)
 
-![Hybrid Re-Ranking Engine](docs/images/07_hybrid_reranker_cascade.jpg)
+![Hybrid Re-Ranking Engine](DOCS/images/07_hybrid_reranker_cascade.jpg)
 
 In enterprise high-throughput production environments, selecting between **FlashRank** and **Cohere v3.5** represents a classic tradeoff between **latency/data privacy** vs **linguistic nuance**:
 
@@ -227,7 +227,7 @@ $$\text{Score}_{\text{final}}(d) = 0.55 \cdot S_{\text{Cohere}}(d) + 0.35 \cdot 
 
 ### 3.6 Model Context Protocol (FastMCP) & Human-In-The-Loop (HITL) Governance
 
-![Model Context Protocol & HITL Governance](docs/images/08_mcp_hitl_governance.jpg)
+![Model Context Protocol & HITL Governance](DOCS/images/08_mcp_hitl_governance.jpg)
 
 #### Model Context Protocol (MCP) Integration:
 - Built with **FastMCP** exposing standardized JSON-RPC 2.0 tool endpoints:
@@ -247,7 +247,7 @@ $$\text{Score}_{\text{final}}(d) = 0.55 \cdot S_{\text{Cohere}}(d) + 0.35 \cdot 
 
 ### 3.7 LLM Gateway & Resilience Matrix (Portkey)
 
-![LLM Gateway](docs/images/04_llm_gateway.jpg)
+![LLM Gateway](DOCS/images/04_llm_gateway.jpg)
 
 * **Semantic Caching:** Identical and near-identical queries return stored responses in `<50ms` at $0.00 cost.
 * **Dual-Tier Model Routing:**
@@ -266,7 +266,7 @@ $$\text{Score}_{\text{final}}(d) = 0.55 \cdot S_{\text{Cohere}}(d) + 0.35 \cdot 
 
 ### 3.9 Cloud Infrastructure & Ephemeral Orchestration
 
-![Cloud Deployment](docs/images/05_cloud_deployment.jpg)
+![Cloud Deployment](DOCS/images/05_cloud_deployment.jpg)
 
 ```
 [Developer Machine / CI Runner]
