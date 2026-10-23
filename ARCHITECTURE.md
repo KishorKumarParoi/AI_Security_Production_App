@@ -11,11 +11,12 @@
    - [3.1 Ingestion & Processing Tier](#31-ingestion--processing-tier)
    - [3.2 Edge WAF & Threat Mitigation Tier (BotShield)](#32-edge-waf--threat-mitigation-tier-botshield)
    - [3.3 Semantic Moderation & Safety Tier (NeMo Guardrails)](#33-semantic-moderation--safety-tier-nemo-guardrails)
-   - [3.4 Agentic Reasoning Core (LangGraph)](#34-agentic-reasoning-core-langgraph)
-   - [3.5 Two-Stage Adaptive Retrieval Tier (Qdrant + FlashRank)](#35-two-stage-adaptive-retrieval-tier-qdrant--flashrank)
-   - [3.6 LLM Gateway & Resilience Matrix (Portkey)](#36-llm-gateway--resilience-matrix-portkey)
-   - [3.7 Distributed Telemetry & Observability (Logfire + LangSmith)](#37-distributed-telemetry--observability-logfire--langsmith)
-   - [3.8 Cloud Infrastructure & Ephemeral Orchestration](#38-cloud-infrastructure--ephemeral-orchestration)
+   - [3.4 Principal Engineer Supervisor & 5 Sub-Agents (Graph & Loop Engineering)](#34-principal-engineer-supervisor--5-sub-agents-graph--loop-engineering)
+   - [3.5 Re-Ranking Architecture: Hybrid Engine (Cohere v3.5 + FlashRank + Lexical BM25)](#35-re-ranking-architecture-hybrid-engine-cohere-v35--flashrank--lexical-bm25)
+   - [3.6 Model Context Protocol (FastMCP) & Human-In-The-Loop (HITL) Governance](#36-model-context-protocol-fastmcp--human-in-the-loop-hitl-governance)
+   - [3.7 LLM Gateway & Resilience Matrix (Portkey)](#37-llm-gateway--resilience-matrix-portkey)
+   - [3.8 Distributed Telemetry & Observability (Logfire + LangSmith)](#38-distributed-telemetry--observability-logfire--langsmith)
+   - [3.9 Cloud Infrastructure & Ephemeral Orchestration](#39-cloud-infrastructure--ephemeral-orchestration)
 4. [Threat Modeling (STRIDE & OWASP Top 10 for LLMs)](#4-threat-modeling-stride--owasp-top-10-for-llms)
 5. [End-to-End Latency Budget & SLA Profile](#5-end-to-end-latency-budget--sla-profile)
 6. [Disaster Recovery & High Availability Matrix](#6-disaster-recovery--high-availability-matrix)
@@ -123,7 +124,7 @@ Configured via declarative **Colang** models and semantic intent matching:
 
 ### 3.4 Principal Engineer Supervisor & 5 Sub-Agents (Graph & Loop Engineering)
 
-![Agentic Retrieval](docs/images/03_agentic_retrieval.jpg)
+![Supervisor Multi-Agent Network](docs/images/06_supervisor_multi_agent.jpg)
 
 The platform implements an autonomous **Supervisor-Worker Multi-Agent Architecture** utilizing **LangGraph StateGraph** with cyclic reflection and self-correction loops.
 
@@ -178,6 +179,8 @@ graph TD
 
 ### 3.5 Re-Ranking Architecture: Hybrid Engine (Cohere v3.5 + FlashRank + Lexical BM25)
 
+![Hybrid Re-Ranking Engine](docs/images/07_hybrid_reranker_cascade.jpg)
+
 In enterprise high-throughput production environments, selecting between **FlashRank** and **Cohere v3.5** represents a classic tradeoff between **latency/data privacy** vs **linguistic nuance**:
 
 | Metric / Dimension | ⚡ FlashRank (Local Cross-Encoder) | 🌐 Cohere v3.5 (Cloud Transformer) |
@@ -224,6 +227,8 @@ $$\text{Score}_{\text{final}}(d) = 0.55 \cdot S_{\text{Cohere}}(d) + 0.35 \cdot 
 
 ### 3.6 Model Context Protocol (FastMCP) & Human-In-The-Loop (HITL) Governance
 
+![Model Context Protocol & HITL Governance](docs/images/08_mcp_hitl_governance.jpg)
+
 #### Model Context Protocol (MCP) Integration:
 - Built with **FastMCP** exposing standardized JSON-RPC 2.0 tool endpoints:
   - `cve_lookup(cve_id)`: Fetches CVSS scores, exploitability metrics, and affected versions.
@@ -240,7 +245,7 @@ $$\text{Score}_{\text{final}}(d) = 0.55 \cdot S_{\text{Cohere}}(d) + 0.35 \cdot 
 
 ---
 
-### 3.6 LLM Gateway & Resilience Matrix (Portkey)
+### 3.7 LLM Gateway & Resilience Matrix (Portkey)
 
 ![LLM Gateway](docs/images/04_llm_gateway.jpg)
 
@@ -252,14 +257,14 @@ $$\text{Score}_{\text{final}}(d) = 0.55 \cdot S_{\text{Cohere}}(d) + 0.35 \cdot 
 
 ---
 
-### 3.7 Distributed Telemetry & Observability (Logfire + LangSmith)
+### 3.8 Distributed Telemetry & Observability (Logfire + LangSmith)
 
 * **Pydantic Logfire:** Captures ASGI request lifecycles, database query latencies, and agent state transitions in structured OpenTelemetry spans.
 * **LangSmith:** Records complete prompt chains, token counts, model latency distributions, and cost metrics per thread ID.
 
 ---
 
-### 3.8 Cloud Infrastructure & Ephemeral Orchestration
+### 3.9 Cloud Infrastructure & Ephemeral Orchestration
 
 ![Cloud Deployment](docs/images/05_cloud_deployment.jpg)
 

@@ -20,6 +20,8 @@
    - [Step 1: Ingestion & Document Processing Pipeline](#step-1-ingestion--document-processing-pipeline)
    - [Step 2: Multi-Layered AI Security & Threat Defense](#step-2-multi-layered-ai-security--threat-defense)
    - [Step 3: LangGraph Agentic Reasoning & Adaptive Retrieval](#step-3-langgraph-agentic-reasoning--adaptive-retrieval)
+   - [Step 3.1: Enterprise Hybrid Re-Ranking Engine (Cohere v3.5 + FlashRank + Lexical BM25)](#step-31-enterprise-hybrid-re-ranking-engine-cohere-v35--flashrank--lexical-bm25)
+   - [Step 3.2: Model Context Protocol (FastMCP) & Human-In-The-Loop (HITL) Governance](#step-32-model-context-protocol-fastmcp--human-in-the-loop-hitl-governance)
    - [Step 4: Portkey LLM Gateway, Resilience & Observability](#step-4-portkey-llm-gateway-resilience--observability)
    - [Step 5: Cloud Deployment, CI/CD & Zero-Cost Teardown](#step-5-cloud-deployment-cicd--zero-cost-teardown)
 3. [Technology Stack & Architectural Tool Matrix](#-technology-stack--architectural-tool-matrix)
@@ -112,7 +114,7 @@ This system solves these failure modes via a **Defense-in-Depth, Decoupled Archi
 
 ### Step 3: LangGraph Agentic Reasoning & Adaptive Retrieval
 
-![Agentic Retrieval Flow](docs/images/03_agentic_retrieval.jpg)
+![Supervisor Multi-Agent Flow](docs/images/06_supervisor_multi_agent.jpg)
 
 #### Autonomous Multi-Agent Network (Supervisor & 5 Specialized Sub-Agents):
 1. **👑 Security Supervisor Agent (`SecuritySupervisor`):**
@@ -125,22 +127,36 @@ This system solves these failure modes via a **Defense-in-Depth, Decoupled Archi
    - Red-teaming specialist evaluating OWASP Top 10 for LLMs (LLM01 Prompt Injection, LLM06 Sensitive Data Leakage), synthesizing exploit mechanics and blast-radius estimations.
 4. **📚 Agent 3: Security Retrieval Agent (`SecurityRetrievalAgent`):**
    - Interfaces with Qdrant Cloud vector collections for enterprise runbooks, hardening guides, and security policies.
-   - Uses the **Dual-Tier Cascading Re-Ranker** (FlashRank + Cohere v3.5).
+   - Uses the **Hybrid Re-Ranking Engine** (Cohere v3.5 + FlashRank ONNX + Lexical BM25 RRF).
 5. **⚖️ Agent 4: Compliance Auditor (`ComplianceAuditorAgent`) — Reflection Loop Critic:**
    - Evaluates proposed remediations against NIST AI RMF, ISO 27001, and CVSS v3.1.
    - **Loop Engineering:** Rejects unverified fixes lacking rollback scripts, generating actionable critique that forces cyclic state regression back to Agent 5.
 6. **🛠️ Agent 5: Remediation Patcher (`RemediationPatchAgent`):**
    - Synthesizes concrete infrastructure fixes: ModSecurity WAF rules, IP blocklists, regex guardrail rules, and application code diffs, refining outputs based on the Auditor's critique.
 
-#### 🎯 Re-Ranking Evaluation: Cohere vs FlashRank (Dual-Tier Cascading Pattern):
-- **FlashRank (Local ONNX):** **1.4ms latency**, **$0.00 cost**, **100% in-VPC air-gapped** data privacy. Runs locally inside the application pod on CPU using quantized `ms-marco-TinyBERT-L-2-v2`.
-- **Cohere v3.5 (Cloud Transformer):** 250ms latency, $1.00/1k searches. Deeper cross-attention semantic nuance for complex multi-hop technical queries.
-- **The Principal Engineer Solution:** We implement a **Cascading Hybrid Architecture**:
-  1. Candidate chunks from Qdrant (top 50) are first pruned down to top 15 in **1.4ms** via local **FlashRank** at zero egress cost.
-  2. If high precision is required, top 15 are refined to top 5 via **Cohere v3.5**.
-  3. If Cohere API is absent or unavailable, FlashRank seamlessly fulfills the ranking with zero downtime.
+---
 
-#### 🔌 FastMCP & ⏸️ Human-In-The-Loop (HITL) Governance:
+### Step 3.1: Enterprise Hybrid Re-Ranking Engine (Cohere v3.5 + FlashRank + Lexical BM25)
+
+![Enterprise Hybrid Re-Ranking Engine](docs/images/07_hybrid_reranker_cascade.jpg)
+
+#### 🎯 Re-Ranking Evaluation: Cohere vs FlashRank (Dual-Tier Cascading & RRF):
+- **FlashRank (Local ONNX):** **1.4ms latency**, **$0.00 cost**, **100% in-VPC air-gapped** data privacy. Runs locally inside the application pod on CPU using quantized `ms-marco-TinyBERT-L-2-v2`.
+- **Cohere v3.5 (Cloud Transformer):** Deep cross-attention semantic nuance capturing multi-hop technical and security reasoning.
+- **Lexical BM25 Security Anchor:** Sublinear term matching with heuristic boosts (3.5x for CVE patterns, 2.0x for WAF/RCE/SSRF primitives).
+- **The Principal Engineer Solution:** We implement three production re-ranking strategies:
+  1. **Reciprocal Rank Fusion (RRF Ensemble):** Merges Cohere, FlashRank, and Lexical rankings via $RRF(d) = \sum \frac{w_m}{60 + \text{rank}_m(d)}$ with zero calibration overhead.
+  2. **Cascade Dual-Tier:** FlashRank rapidly prunes raw candidates (50 ➔ 15) in **1.4ms** at $0.00 cost; Cohere v3.5 refines to the top-5 high-assurance results.
+  3. **Convex Score Blending:** Weighted min-max normalized combination ($0.55 \cdot S_{\text{Cohere}} + 0.35 \cdot S_{\text{FlashRank}} + 0.10 \cdot S_{\text{Lexical}}$).
+- **Resilience Invariant:** If Cohere API experiences outages or rate limits, the system seamlessly falls back to FlashRank with **zero downtime and 1.4ms guaranteed latency**.
+
+---
+
+### Step 3.2: Model Context Protocol (FastMCP) & Human-In-The-Loop (HITL) Governance
+
+![Model Context Protocol & HITL Governance](docs/images/08_mcp_hitl_governance.jpg)
+
+#### 🔌 FastMCP & ⏸️ Human-In-The-Loop (HITL) Break-Glass Protection:
 - **FastMCP Tool Server:** Standardized Model Context Protocol server exposing `cve_lookup`, `threat_intel_feed`, and `waf_metrics` over JSON-RPC 2.0.
 - **HITL Break-Glass Protection:** Critical actions (such as dynamic WAF IP bans or kernel patch deployments) trigger an execution suspension:
   - `GET /api/v1/hitl/pending/{thread_id}`: Review pending high-impact action and severity.
