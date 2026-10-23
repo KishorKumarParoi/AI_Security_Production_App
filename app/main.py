@@ -219,34 +219,47 @@ def get_search_health():
 
 @app.get("/api/v1/reranker/benchmark", tags=["Dual-Tier Re-Ranking"])
 def get_reranker_benchmark():
-    """Compares FlashRank (local in-process ONNX) vs Cohere API re-ranking latency and accuracy."""
+    """Compares FlashRank (local in-process ONNX) vs Cohere v3.5 vs Hybrid RRF vs Cascade re-ranking."""
     import time
     from app.services.reranker import hybrid_reranker
     test_docs = [
-        {"id": 1, "text": "BotShield WAF blocks SQL injection, scanner User-Agents, and honeypot traps."},
-        {"id": 2, "text": "LangGraph multi-agent systems coordinate autonomous agents with cyclic state graphs."},
-        {"id": 3, "text": "NeMo Guardrails enforces Colang policies and blocks prompt injection."},
-        {"id": 4, "text": "FastMCP standardizes tool execution across microservices over JSON-RPC."},
-        {"id": 5, "text": "A standard chocolate cake recipe with cocoa powder and flour."}
+        {"id": "doc1", "text": "BotShield WAF blocks SQL injection, scanner User-Agents, and honeypot traps."},
+        {"id": "doc2", "text": "LangGraph multi-agent systems coordinate autonomous agents with cyclic state graphs."},
+        {"id": "doc3", "text": "NeMo Guardrails enforces Colang policies and blocks prompt injection."},
+        {"id": "doc4", "text": "FastMCP standardizes tool execution across microservices over JSON-RPC."},
+        {"id": "doc5", "text": "A standard chocolate cake recipe with cocoa powder and flour."}
     ]
     query = "How to block SQL injection and prompt injection in LangGraph agents?"
     
-    # FlashRank Benchmark
+    # 1. FlashRank Benchmark
     t0 = time.perf_counter()
     flash_res = hybrid_reranker.rerank_flashrank(query, test_docs, top_k=3)
     flash_dur_ms = (time.perf_counter() - t0) * 1000
 
-    # Cohere Benchmark
+    # 2. Cohere Benchmark
     cohere_dur_ms = None
     cohere_status = "unconfigured"
+    cohere_top_1 = None
+    cohere_res = []
     if hybrid_reranker.cohere_key:
         try:
             t1 = time.perf_counter()
             cohere_res = hybrid_reranker.rerank_cohere(query, test_docs, top_k=3)
             cohere_dur_ms = (time.perf_counter() - t1) * 1000
             cohere_status = "operational"
+            cohere_top_1 = cohere_res[0].get("text") if cohere_res else None
         except Exception as e:
             cohere_status = f"failed: {e}"
+
+    # 3. Hybrid RRF Ensemble Benchmark
+    t2 = time.perf_counter()
+    rrf_res = hybrid_reranker.rerank(query, test_docs, top_k=3, mode="hybrid_rrf")
+    rrf_dur_ms = (time.perf_counter() - t2) * 1000
+
+    # 4. Cascade Dual-Tier Benchmark
+    t3 = time.perf_counter()
+    cascade_res = hybrid_reranker.rerank(query, test_docs, top_k=3, mode="cascade")
+    cascade_dur_ms = (time.perf_counter() - t3) * 1000
 
     return {
         "benchmark_query": query,
@@ -254,13 +267,30 @@ def get_reranker_benchmark():
             "status": "operational",
             "latency_ms": round(flash_dur_ms, 2),
             "top_1": flash_res[0].get("text") if flash_res else None,
+            "top_1_score": round(flash_res[0].get("rerank_score", 0.0), 4) if flash_res else None,
             "cost": "$0.00 (Local In-Process ONNX)"
         },
-        "cohere": {
+        "cohere_v3_5": {
             "status": cohere_status,
             "latency_ms": round(cohere_dur_ms, 2) if cohere_dur_ms else "N/A",
+            "top_1": cohere_top_1,
+            "top_1_score": round(cohere_res[0].get("rerank_score", 0.0), 4) if cohere_res else None,
             "cost": "$1.00 / 1k queries (Hosted Cloud API)"
         },
-        "recommendation": "Cascade: FlashRank for fast in-VPC local candidate pruning (sub-15ms) + Cohere for optional deep semantic attention."
+        "hybrid_rrf_ensemble": {
+            "status": "operational",
+            "latency_ms": round(rrf_dur_ms, 2),
+            "top_1": rrf_res[0].get("text") if rrf_res else None,
+            "rrf_score": rrf_res[0].get("rrf_score") if rrf_res else None,
+            "method": "Reciprocal Rank Fusion (Cohere 0.50 + FlashRank 0.35 + Lexical 0.15)"
+        },
+        "cascade_dual_tier": {
+            "status": "operational",
+            "latency_ms": round(cascade_dur_ms, 2),
+            "top_1": cascade_res[0].get("text") if cascade_res else None,
+            "method": "FlashRank candidate prune (50 -> 15) -> Cohere deep cross-attention"
+        },
+        "engine_metrics": hybrid_reranker.get_metrics(),
+        "recommendation": "Use 'hybrid_rrf' for security critical evaluations and 'cascade' for high-throughput API endpoints."
     }
 

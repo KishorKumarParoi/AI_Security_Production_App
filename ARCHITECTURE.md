@@ -176,7 +176,7 @@ graph TD
 
 ---
 
-### 3.5 Re-Ranking Architecture: Cohere vs FlashRank Trade-Off Analysis
+### 3.5 Re-Ranking Architecture: Hybrid Engine (Cohere v3.5 + FlashRank + Lexical BM25)
 
 In enterprise high-throughput production environments, selecting between **FlashRank** and **Cohere v3.5** represents a classic tradeoff between **latency/data privacy** vs **linguistic nuance**:
 
@@ -187,11 +187,21 @@ In enterprise high-throughput production environments, selecting between **Flash
 | **Inference Latency** | **1.2ms – 14ms** (CPU-only, sub-millisecond) | **180ms – 450ms** (Network hop + TLS + cloud inference) |
 | **Operational Cost** | **$0.00** (Zero compute cost, runs in application pod) | **$1.00 per 1,000 queries** (Scale-dependent recurring cost) |
 | **Data Privacy & Compliance**| **100% Air-Gapped / In-VPC** (Zero data egress, GDPR/HIPAA compliant) | **Data egresses VPC** to 3rd-party SaaS (requires enterprise DPA) |
-| **Ranking Quality (NDCG@10)**| 82% – 88% on standard semantic IR benchmarks | **92% – 96%** (State of the art on multi-hop technical reasoning) |
+| **Ranking Quality (NDCG@10)**| 82% – 88% on standard semantic IR benchmarks | **94% – 97%** (State of the art on multi-hop technical reasoning) |
+| **Exact Anchor Matching** | Moderate (neural embeddings can dilute exact tokens) | High (transformer cross-attention across full sequences) |
 | **Failure Modes** | Bounded by host CPU/RAM | Network timeout, 429 rate limit, SaaS outage |
 
-#### 🏆 Principal Engineer Architectural Decision: The Cascading Dual-Tier Pattern
-Rather than picking one, we engineered the **Cascade Hybrid Re-Ranking Pattern**:
+#### 🏆 Principal Engineer Hybrid Re-Ranking Strategies:
+
+The platform implements three complementary hybrid re-ranking strategies in [`app/services/reranker.py`](file:///Users/kishorkumarparoi/Desktop/AI_Security_Production_App/app/services/reranker.py):
+
+##### Strategy 1: Reciprocal Rank Fusion (RRF) Ensemble (`mode="hybrid_rrf"`)
+Blends ranking signals across disparate models and exact keyword matches without requiring raw score calibration:
+$$RRF(d) = \sum_{m \in \{\text{Cohere}, \text{FlashRank}, \text{Lexical}\}} \frac{w_m}{k + \text{rank}_m(d)}$$
+- **Parameters:** Smoothing factor $k=60$; Weights: $w_{\text{Cohere}}=0.50$, $w_{\text{FlashRank}}=0.35$, $w_{\text{Lexical}}=0.15$.
+- **Security Anchor Boost:** The Lexical BM25 scorer applies heuristic boosts for exact CVE identifiers (`CVE-\d{4}-\d{4,}`), status codes (`403`, `500`), and critical primitives (`WAF`, `RCE`, `SSRF`).
+
+##### Strategy 2: Cascade Dual-Tier Re-Ranking (`mode="cascade"`)
 ```
 Stage 1: Qdrant Vector DB ➔ Top-50 candidate chunks (Recall-oriented)
              │
@@ -203,7 +213,12 @@ Stage 3: Cohere v3.5 Deep Cross-Encoder ➔ Refines Top-15 down to Top-5
              ▼
          Top-5 Ultra-Dense Context passed to LLM Generation
 ```
-* **Fallback Resilience:** If `COHERE_API_KEY` is omitted, depleted, or times out (>1.5s), the system seamlessly falls back to FlashRank's ranking with zero downtime and sub-15ms guaranteed latency.
+
+##### Strategy 3: Normalized Convex Score Blending (`mode="score_fusion"`)
+Min-max normalizes scores into $[0, 1]$ and computes the weighted convex combination:
+$$\text{Score}_{\text{final}}(d) = 0.55 \cdot S_{\text{Cohere}}(d) + 0.35 \cdot S_{\text{FlashRank}}(d) + 0.10 \cdot S_{\text{Lexical}}(d)$$
+
+* **Fallback Resilience:** If `COHERE_API_KEY` is omitted, rate-limited, or encounters timeouts (>1.5s), the system seamlessly completes the ranking via FlashRank with zero downtime and sub-15ms guaranteed latency.
 
 ---
 

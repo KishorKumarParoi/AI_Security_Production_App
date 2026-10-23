@@ -55,8 +55,8 @@ def retrieval_agent_node(state: SupervisorState) -> Dict[str, Any]:
     # We combine vector candidates with enterprise policy corpus.
     candidates = list(BASELINE_SECURITY_POLICIES)
 
-    # Apply Dual-Tier Re-Ranker (FlashRank + Cohere Cascade)
-    ranked_docs = hybrid_reranker.rerank(query, candidates, top_k=3, mode="cascade")
+    # Apply Principal Engineer Hybrid Re-Ranker (Cohere v3.5 + FlashRank ONNX + Lexical BM25 RRF)
+    ranked_docs = hybrid_reranker.rerank(query, candidates, top_k=3, mode="hybrid_rrf")
 
     formatted_docs = []
     for doc in ranked_docs:
@@ -66,7 +66,11 @@ def retrieval_agent_node(state: SupervisorState) -> Dict[str, Any]:
             "content": doc.get("content"),
             "category": doc.get("category"),
             "rerank_score": doc.get("rerank_score", 0.0),
-            "ranker": doc.get("ranker", "cascade")
+            "rrf_score": doc.get("rrf_score", doc.get("rerank_score", 0.0)),
+            "cohere_score": doc.get("cohere_score"),
+            "flashrank_score": doc.get("flashrank_score"),
+            "lexical_score": doc.get("lexical_score"),
+            "ranker": doc.get("ranker", "hybrid_rrf_ensemble")
         })
 
     completed = list(state.get("completed_steps", []))
@@ -75,5 +79,5 @@ def retrieval_agent_node(state: SupervisorState) -> Dict[str, Any]:
     return {
         "retrieved_documents": formatted_docs,
         "completed_steps": completed,
-        "status": f"Retrieved and re-ranked {len(formatted_docs)} enterprise policies via {ranked_docs[0].get('ranker', 'hybrid')}."
+        "status": f"Retrieved and hybrid re-ranked {len(formatted_docs)} enterprise policies via {ranked_docs[0].get('ranker', 'hybrid_rrf')}."
     }

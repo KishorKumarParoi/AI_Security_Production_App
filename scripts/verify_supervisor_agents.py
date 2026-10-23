@@ -38,7 +38,7 @@ def test_1_web_search_intelligence():
 
 
 def test_2_dual_tier_reranker():
-    print("\n⚡ [TEST 2] Testing Dual-Tier Re-Ranker (FlashRank vs Cohere Cascade)...")
+    print("\n⚡ [TEST 2] Testing Hybrid Re-Ranker (Cohere v3.5 + FlashRank ONNX + Lexical RRF)...")
     test_docs = [
         {"id": "doc1", "text": "BotShield WAF blocks SQL injection, scanner User-Agents, and honeypot traps."},
         {"id": "doc2", "text": "LangGraph multi-agent systems coordinate autonomous agents with cyclic state graphs."},
@@ -47,7 +47,7 @@ def test_2_dual_tier_reranker():
     ]
     query = "How to block SQL injection and prompt injection in LangGraph agents?"
 
-    # 1. FlashRank Local Test
+    # 1. FlashRank Local ONNX Test
     t0 = time.perf_counter()
     flash_ranked = hybrid_reranker.rerank_flashrank(query, test_docs, top_k=2)
     flash_ms = (time.perf_counter() - t0) * 1000
@@ -55,9 +55,24 @@ def test_2_dual_tier_reranker():
     print(f"  ✅ FlashRank (Local ONNX): {flash_ms:.2f}ms | Top-1: {flash_ranked[0]['id']} (Score: {flash_ranked[0].get('rerank_score'):.3f})")
     assert flash_ranked[0]["id"] in ("doc1", "doc3"), "Top document should be relevant security policy"
 
-    # 2. Cascade Test
+    # 2. Live Cohere v3.5 Cross-Attention Test
+    if hybrid_reranker.cohere_key:
+        t1 = time.perf_counter()
+        cohere_ranked = hybrid_reranker.rerank_cohere(query, test_docs, top_k=2)
+        cohere_ms = (time.perf_counter() - t1) * 1000
+        print(f"  ✅ Cohere v3.5 (Cloud Transformer): {cohere_ms:.2f}ms | Top-1: {cohere_ranked[0]['id']} (Score: {cohere_ranked[0].get('rerank_score'):.3f})")
+        assert len(cohere_ranked) == 2
+
+    # 3. Hybrid Reciprocal Rank Fusion (RRF)
+    t2 = time.perf_counter()
+    rrf_ranked = hybrid_reranker.rerank(query, test_docs, top_k=3, mode="hybrid_rrf")
+    rrf_ms = (time.perf_counter() - t2) * 1000
+    print(f"  ✅ Hybrid RRF Ensemble: {rrf_ms:.2f}ms | Top-1: {rrf_ranked[0]['id']} (RRF: {rrf_ranked[0].get('rrf_score'):.5f}, Cohere: {rrf_ranked[0].get('cohere_score')}, FlashRank: {rrf_ranked[0].get('flashrank_score')})")
+
+    # 4. Cascade Re-Ranker Test
     cascade_ranked = hybrid_reranker.rerank(query, test_docs, top_k=2, mode="cascade")
     print(f"  ✅ Cascaded Re-Ranker: Successfully executed via {cascade_ranked[0].get('ranker', 'hybrid')}")
+
 
 
 def test_3_model_context_protocol():
