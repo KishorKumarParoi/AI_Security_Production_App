@@ -114,12 +114,37 @@ This system solves these failure modes via a **Defense-in-Depth, Decoupled Archi
 
 ![Agentic Retrieval Flow](docs/images/03_agentic_retrieval.jpg)
 
-#### Two-Stage Retrieval & Routing:
-1. **Planner Node & Intent Classifier:** Uses few-shot semantic classification to categorize queries into `conversational` (greetings, identity, capabilities) vs. `technical_domain`.
-2. **Conversational Branch:** Bypasses vector database entirely, saving latency and cost while retrieving past dialogue state via `MemorySaver` thread checkpoints.
-3. **Stage 1 (Bi-Encoder Dense Search):** Queries Qdrant Cloud via approximate nearest neighbor (ANN) search, retrieving top-10 candidate chunks in `<35ms`.
-4. **Stage 2 (Cross-Encoder FlashRank Reranker):** Executes local ultra-fast cross-encoder reranking over candidate chunks, scoring relevance and filtering to the top-3 highest-density snippets.
-5. **Responder Synthesis:** LLM synthesizes a grounded answer, generating explicit reasoning traces (`thought_process`) and citations (`sources`).
+#### Autonomous Multi-Agent Network (Supervisor & 5 Specialized Sub-Agents):
+1. **👑 Security Supervisor Agent (`SecuritySupervisor`):**
+   - Triages incoming threat intelligence queries, formulates dynamic DAG execution plans, and synthesizes multi-agent findings into comprehensive incident response briefings.
+2. **🕵️ Agent 1: Threat Researcher (`ThreatResearcherAgent`):**
+   - **Tavily Search API:** Deep semantic technical web searches across security CVE bulletins, vendor advisories, and dark-web indicators.
+   - **Serper Google API:** Google Search API integration for zero-day news coverage and community threat reports.
+   - **FastMCP Protocol:** Dispatches RPC queries to local Model Context Protocol tools (`cve_lookup`, `threat_intel_feed`).
+3. **💥 Agent 2: Exploit Analyst (`ExploitAnalystAgent`):**
+   - Red-teaming specialist evaluating OWASP Top 10 for LLMs (LLM01 Prompt Injection, LLM06 Sensitive Data Leakage), synthesizing exploit mechanics and blast-radius estimations.
+4. **📚 Agent 3: Security Retrieval Agent (`SecurityRetrievalAgent`):**
+   - Interfaces with Qdrant Cloud vector collections for enterprise runbooks, hardening guides, and security policies.
+   - Uses the **Dual-Tier Cascading Re-Ranker** (FlashRank + Cohere v3.5).
+5. **⚖️ Agent 4: Compliance Auditor (`ComplianceAuditorAgent`) — Reflection Loop Critic:**
+   - Evaluates proposed remediations against NIST AI RMF, ISO 27001, and CVSS v3.1.
+   - **Loop Engineering:** Rejects unverified fixes lacking rollback scripts, generating actionable critique that forces cyclic state regression back to Agent 5.
+6. **🛠️ Agent 5: Remediation Patcher (`RemediationPatchAgent`):**
+   - Synthesizes concrete infrastructure fixes: ModSecurity WAF rules, IP blocklists, regex guardrail rules, and application code diffs, refining outputs based on the Auditor's critique.
+
+#### 🎯 Re-Ranking Evaluation: Cohere vs FlashRank (Dual-Tier Cascading Pattern):
+- **FlashRank (Local ONNX):** **1.4ms latency**, **$0.00 cost**, **100% in-VPC air-gapped** data privacy. Runs locally inside the application pod on CPU using quantized `ms-marco-TinyBERT-L-2-v2`.
+- **Cohere v3.5 (Cloud Transformer):** 250ms latency, $1.00/1k searches. Deeper cross-attention semantic nuance for complex multi-hop technical queries.
+- **The Principal Engineer Solution:** We implement a **Cascading Hybrid Architecture**:
+  1. Candidate chunks from Qdrant (top 50) are first pruned down to top 15 in **1.4ms** via local **FlashRank** at zero egress cost.
+  2. If high precision is required, top 15 are refined to top 5 via **Cohere v3.5**.
+  3. If Cohere API is absent or unavailable, FlashRank seamlessly fulfills the ranking with zero downtime.
+
+#### 🔌 FastMCP & ⏸️ Human-In-The-Loop (HITL) Governance:
+- **FastMCP Tool Server:** Standardized Model Context Protocol server exposing `cve_lookup`, `threat_intel_feed`, and `waf_metrics` over JSON-RPC 2.0.
+- **HITL Break-Glass Protection:** Critical actions (such as dynamic WAF IP bans or kernel patch deployments) trigger an execution suspension:
+  - `GET /api/v1/hitl/pending/{thread_id}`: Review pending high-impact action and severity.
+  - `POST /api/v1/hitl/approve`: SecOps human supervisor approves or rejects. Execution resumes only upon cryptographic approval.
 
 ---
 
