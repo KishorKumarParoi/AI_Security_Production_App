@@ -14,8 +14,24 @@
 
 ---
 
+### ⚡ Quick Start: 1-Command Zero-Touch EC2 Bootstrapper
+
+Run this single command directly on any bare Ubuntu / Debian / Amazon Linux EC2 instance or cloud VM. It automatically installs git & docker, allocates 4GB swap memory for OOM protection on cheap instances (`t3.medium`), clones the codebase with `--depth 1`, configures secrets, builds the multi-stage images with BuildKit, and launches both services:
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/KishorKumarParoi/AI_Security_Production_App/main/bootstrap.sh | bash
+```
+
+*Zero pre-configuration required. Services will immediately become reachable at:*
+* **API & Swagger Docs**: `http://<EC2_PUBLIC_IP>:8080/docs`
+* **Streamlit Ops Portal**: `http://<EC2_PUBLIC_IP>:8501`
+* **Zero-Cost Teardown**: `./clear.sh`
+
+---
+
 ## 📑 Table of Contents
-1. [Executive Architectural Summary](#-executive-architectural-summary)
+1. [⚡ Quick Start: 1-Command Bootstrapper](#-quick-start-1-command-zero-touch-ec2-bootstrapper)
+2. [Executive Architectural Summary](#-executive-architectural-summary)
 2. [Step-by-Step Visual Architecture & System Flows](#-step-by-step-visual-architecture--system-flows)
    - [Step 1: Ingestion & Document Processing Pipeline](#step-1-ingestion--document-processing-pipeline)
    - [Step 2: Multi-Layered AI Security & Threat Defense](#step-2-multi-layered-ai-security--threat-defense)
