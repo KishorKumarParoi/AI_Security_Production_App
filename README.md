@@ -9,8 +9,12 @@
 [![NeMo Guardrails](https://img.shields.io/badge/NVIDIA-NeMo%20Guardrails-76B900?logo=nvidia&logoColor=white)](https://github.com/NVIDIA/NeMo-Guardrails)
 [![Portkey AI](https://img.shields.io/badge/Portkey-LLM%20Gateway-4F46E5)](https://portkey.ai/)
 [![Qdrant Cloud](https://img.shields.io/badge/Qdrant-Vector%20DB-DC2626?logo=qdrant&logoColor=white)](https://qdrant.tech/)
+[![Architecture: Specification](https://img.shields.io/badge/Architecture-Specification-8A2BE2?logo=diagramsdotnet&logoColor=white)](ARCHITECTURE.md)
+[![Workflow: SVG Flow](https://img.shields.io/badge/Workflow-Interactive_SVG-00C7B7?logo=vectorlogozone&logoColor=white)](docs/images/01_architecture_flow.svg)
 
-> **A production-hardened Enterprise Agentic RAG microservice engineered for high-throughput, mission-critical environments.** Featuring dual-layer defense (**BotShield WAF** + **NVIDIA NeMo Guardrails**), **LangGraph cyclic state orchestration**, **two-stage adaptive retrieval** (Jina v3 + FlashRank cross-encoder), **Portkey resilient gateway** with automatic fallback, **distributed telemetry** (Logfire + LangSmith), and **push-button zero-cost AWS cloud deployment**.
+> **A production-hardened Enterprise Agentic RAG microservice engineered for high-throughput, mission-critical environments.** Featuring dual-layer defense (**BotShield WAF** + **NVIDIA NeMo Guardrails**), **LangGraph cyclic state orchestration**, **two-stage adaptive retrieval** (Jina v3 + FlashRank cross-encoder), **Portkey resilient gateway** with automatic fallback, **distributed telemetry** (Logfire + LangSmith), and **push-button zero-cost AWS cloud deployment**. Full architecture blueprint available in [ARCHITECTURE.md](ARCHITECTURE.md) and interactive vector flow in [01_architecture_flow.svg](docs/images/01_architecture_flow.svg).
+
+![Enterprise AI Security Architecture Flow](docs/images/01_architecture_flow.svg)
 
 ---
 
